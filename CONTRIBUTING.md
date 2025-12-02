@@ -1,143 +1,119 @@
-# Contributing to SerenityOS
+# Contributing to CawOS
 
-When contributing to SerenityOS, make sure that the changes you wish to make are in line with the project direction. If you are not sure about this, open an issue first, so we can discuss it.
+Если хочешь улучшить CawOS — добро пожаловать. Главное правило простое: изменения должны быть в духе системы. Если не уверен, просто спроси или создай issue, чтобы обсудить идею.
 
-**For your first couple of PRs, start with something small to get familiar with the project and its development processes. Please do not start by adding a new application, library or other large component.**
+**Совет:** первые PR лучше делать маленькими. Начинать с огромных фич или переписывания систем — плохая идея.
 
-Everyone is welcome to work on the project, and while we have lots of fun, it's a serious kind of fun. :^)
+Мы рады всем, но работа идёт серьёзно, хоть и в дружеской атмосфере.
 
-## Communication
+---
 
-Join our Discord server: [SerenityOS Discord](https://serenityos.org/discord)
+## Общение
 
-## Issue policy
+Наш Discord: *(https://discord.gg/5DjfVjmVhD)*  
+Там быстрее всего можно получить ответ.
 
-Unlike many other software projects, SerenityOS is not concerned with gaining the largest possible userbase. Its target audience is its own developers. As such, we have limited interest in feature requests from non-contributors.
+---
 
-That said, please do file any bugs you find, keeping the following in mind:
+## Политика по Issues
 
--   One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
--   No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
--   Don't comment on issues just to add a joke or irrelevant commentary. Hundreds of people get notified about comments so let's keep them relevant.
--   For bare metal issues, please include the complete debug log from the serial console and what you tried to do to solve the issue before opening the issue. Don't forget to add the hardware model of your machine and relevant details about it, to help us diagnose what the problem is.
+Мы не гонимся за пользовательскими хотелками, но ошибки — святое.
 
-## Human language policy
+Правила простые:
 
-In SerenityOS, we treat human language as seriously as we do programming language.
+- Один баг — один issue.  
+- Не создавай issues о том, что у тебя не собирается (если CI проходит, значит проблема у тебя).  
+- Не засоряй обсуждения лишними шутками или “+1”.  
+- Прикладывай логи, информацию о системе и что ты уже пробовал.
 
-The following applies to all user-facing strings, code, comments, and commit messages:
+---
 
--   The official project language is American English with ISO 8601 dates and metric units.
--   Use proper spelling, grammar, and punctuation.
--   Write in an authoritative and technical tone.
+## Политика языка
 
-Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
+Весь проект ведётся аккуратно: код, UI, сообщения, документация.
 
-## Testing policy
+- Основной язык — **английский**.  
+- Даты — ISO 8601.  
+- Метрика.  
+- Пиши без ошибок, используй spell-checker.
 
-When possible, please include tests when fixing bugs or adding new features.
+---
 
-## Code submission policy
+## Тесты
 
-Nobody is perfect, and sometimes we mess things up. That said, here are some good dos & don'ts to try and stick to:
+Если правишь баг или добавляешь фичу — тесты очень желательны.
 
-**Do:**
+---
 
--   Write in idiomatic SerenityOS C++23, using the `AK` containers in all code.
--   Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 20 or later) to automatically format C++ files. See [AdvancedBuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/AdvancedBuildInstructions.md#clang-format-updates) for instructions on how to get an up-to-date version if your OS distribution does not ship clang-format-20.
--   Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
--   Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
--   Make sure your commits are rebased on the master branch.
--   Wrap your commit messages at 72 characters.
--   The first line of the commit message is the subject line, and must have the format "Category: Brief description of what's being changed". The category should be the name of a library, application, service, utility, etc.
-    -   Examples: `LibAudio`, `HackStudio`, `Base`, `Kernel`, `ConfigServer`, `cat`
-    -   Don't use a category like "`Userland`" or "`Utilities`", except for generic changes that affect a large portion of code within these directories.
-    -   Don't use specific component names, e.g. C++ class names, as the category either - mention them in the summary instead. E.g. `LibGUI: Brief description of what's being changed in FooWidget` rather than `FooWidget: Brief description of what's being changed`
-    -   Several categories may be combined with `+`, e.g. `LibJS+LibWeb+Browser: ...`
--   Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
--   Write your commit messages in proper English, with care and punctuation.
--   Amend your existing commits when adding changes after a review, where relevant.
--   Mark each review comment as "resolved" after pushing a fix with the requested changes.
--   Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
--   Check the spelling of your code, comments and commit messages.
--   If you have images that go along with your code, run `optipng -strip all` on them to optimize and strip away useless metadata - this can reduce file size from multiple kilobytes to a couple hundred bytes.
+## Как присылать изменения
 
-**Don't:**
+### Делай:
 
--   Submit code that's incompatible with the project licence (2-clause BSD.)
--   Touch anything outside the stated scope of the PR.
--   Iterate excessively on your design across multiple commits.
--   Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
--   End commit message subject lines with a period.
--   Include commented-out code.
--   Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
--   Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
--   Engage in excessive "feng shui programming" by moving code around without quantifiable benefit.
--   Add jokes or other "funny" things to user-facing parts of the system.
+- Следуй стилю CawOS C++ (основано на SerenityOS).  
+- Используй clang-format 20+.  
+- Используй AK-контейнеры.  
+- Называй функции и переменные понятно.  
+- Один коммит — одно изменение.  
+- Rebаse перед отправкой PR.  
+- Сообщение коммита до 72 символов.  
+- Формат сообщения:
 
-## Pull Request Q&A
+## Category: Краткое изменение
 
-### I've submitted a PR and it passes CI. When can I expect to get some review feedback?
 
-While unadvertised PRs may get randomly merged by curious maintainers, you will have a much smoother time if you engage with the community on Discord.
+Примеры категорий: `Kernel`, `LibGUI`, `Base`, `WindowServer`.
 
-### If my PR isn't getting attention, how long should I wait before pinging one of the project maintainers?
+- Пиши в повелительном наклонении (например: `Kernel: Add panic test`).
+- Добавляй copyright, если вносишь существенные изменения.
+- Изображения — через `optipng -strip all`.
 
-Ping them right away if it's something urgent! If it's less urgent, advertise your PR on Discord (`#code-review`) and ask if someone could review it.
+### Не делай:
 
-### Who are the project maintainers?
+- Ничего несовместимого с 2-clause BSD.  
+- Огромных архитектурных перезаливок, пока ты новичок.  
+- Закомментированного мусора в коде.  
+- C-кода (только нормальный C++).  
+- Неоформленных коммитов типа “Fix” или “Refactor” без описания.  
+- Шуточных строк в интерфейсе — система остаётся серьёзной.  
+- Точки в первой строке коммита.
 
--   [@ADKaster](https://github.com/ADKaster)
--   [@alimpfard](https://github.com/alimpfard)
--   [@AtkinsSJ](https://github.com/AtkinsSJ)
--   [@BertalanD](https://github.com/BertalanD)
--   [@GMTA](https://github.com/gmta)
--   [@Lubrsi](https://github.com/Lubrsi)
--   [@nico](https://github.com/nico)
--   [@spholz](https://github.com/spholz)
--   [@timschumi](https://github.com/timschumi)
--   [@trflynn89](https://github.com/trflynn89)
+---
 
-Maintainership is by invitation only and does not correlate with any particular metric.
+## Вопросы по PR
 
-### Is there a policy for branches/PRs that haven't been touched in X days? Should they be closed?
+### Когда ждать ревью?
+Как повезёт. Иногда быстро, иногда дольше.  
 
-Yes, we have a "stalebot" that will mark untouched PRs as "stale" after 21 days, and close them after another 7 days if nothing happens.
+### Кого пинговать?
+Лучше всего в Discord — там подскажут, кто отвечает за нужную часть.
 
-### Are there specific people to reach out to for different subsystems (e.g. Kernel, Browser, GUI, etc)?
+### Старые PR
+Если 3 недели без движения — помечается как stale.  
+Через неделю закрывается.
 
-In theory, the best person to speak with is whoever wrote most code adjacent to what you're working on. In practice, asking in one of the development channels on Discord is usually easier/better, since that allows many people to join the discussion.
+---
 
-### Is Discord the place to ask for review help, or is Github preferred?
+## Commit hooks
 
-It's definitely better to ask on Discord. Due to the volume of GitHub notifications, many of us turn them off and rely on Discord for learning about review requests.
+В репозитории есть готовые pre-commit хуки.  
+Включаются так:
 
-## Commit Hooks
+```sh
+pre-commit install
 
-The repository contains a file called `.pre-commit-config.yaml` that defines several 'commit hooks' that can be run automatically just before and after creating a new commit. These hooks lint your commit message, and the changes it contains to ensure they will pass the automated CI for pull requests.
-To enable these hooks firstly follow the installation instructions available at https://pre-commit.com/#install and then enable one or both of the following hooks:
 
--   pre-commit hook - Runs Meta/lint-ci.sh and Meta/lint-ports.py to ensure changes to the code will pass linting:
-    ```console
-    pre-commit install
-    ```
--   post-commit hook - Lints the commit message to ensure it will pass the commit linting:
-    ```console
-    pre-commit install --hook-type commit-msg
-    ```
+Только проверка сообщения коммита:
 
-## On abandoned pull requests
+pre-commit install --hook-type commit-msg
 
-Sometimes good PRs get abandoned by the author for one reason or another. If the PR is fundamentally good, but the author is not responding to requests, the PR may be manually integrated with minor changes to code and commit messages.
+Заброшенные PR
 
-To make this easier, we do appreciate it if folks enable the "Allow edits from maintainers" flag on their pull requests.
+Если изменение хорошее, но автор пропал — мейнтейнеры могут довести его сами (если включён “Allow edits from maintainers”).
 
-## On ideologically motivated changes
+Про идеологию
 
-Serenity's goal is to enable collaboration between as many groups as _reasonably_ possible, and we welcome contributions that make the project more accessisble to people.
+CawOS — технический проект.
+Темы политики, религии, агрессии — мимо.
+Если изменения несут спорные смыслы — они отклоняются.
 
-However, Serenity is intended to be a purely technical exercise, in the sense of it not being meant to invoke any sociopolitical change. We explicitly try to avoid drama or getting involved in "external" culture wars, and can reject changes that we feel to be sensitive.
-
-For instance, we can reject changes promoting dogwhistles, religious beliefs—which are unambiguously off-topic—or real-world political candidates.
-
-We may miss the mark sometimes, but we encourage good-faith dialogue over anger.
+Ошиблись? Недопоняли? Пиши. Мы общаемся спокойно.
