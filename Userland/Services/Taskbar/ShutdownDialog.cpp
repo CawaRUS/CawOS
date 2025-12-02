@@ -24,7 +24,9 @@ struct Option {
 };
 
 static Array const options = {
-    Option { "Power off computer", { "/bin/shutdown"sv, { "--now" } }, true, true },
+    // ЗАМЕНА: Используем точку с запятой (;) вместо &&.
+    // Это гарантирует выключение, даже если звук не сработает.
+    Option { "Power off computer", { "/bin/sh"sv, { "-c", "/bin/playsound shutdown; /bin/shutdown --now" } }, true, true },
     Option { "Reboot", { "/bin/reboot"sv, {} }, true, false },
     Option { "Log out", { "/bin/logout"sv, {} }, true, false },
 };

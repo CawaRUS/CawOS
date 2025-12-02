@@ -1,242 +1,616 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <title>Welcome!</title>
-    <!-- this is a comment -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная — CawNet (Lite Edition)</title>
     <style>
-        /* css comment */
+        /*
+         * --- БАЗОВЫЕ РЕТРО СТИЛИ (Win98 / Geocities) ---
+         * Только блочные элементы, без flex/grid/анимаций/теней.
+         */
+        :root {
+            --bg-body: #008080; /* Teal/Cyan */
+            --bg-main: #c0c0c0; /* Classic Grey UI */
+            --bg-element: #ffffff;
+            --accent: #000080; /* Dark Blue */
+            --text-color: #000000;
+            --border-shadow-light: #ffffff;
+            --border-shadow-dark: #808080;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 0; /* Убираем скругления */
+        }
+
         body {
-            background-color: #000;
-            background-image: url("90s-bg.png");
-            color: #fff;
-            /* another css comment */
+            background: var(--bg-body);
+            font-family: 'Verdana', 'Tahoma', sans-serif; /* Базовый системный шрифт */
+            color: var(--text-color);
+            line-height: 1.4;
+            text-align: center;
+            padding: 10px;
         }
-        /* lol
-   a
-   css
-   comment */
+        
+        /* Удаление современного фона */
+        #neuralCanvas { display: none; }
 
+        .corner-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: block; /* Только базовое блочное расположение */
+        }
+        .theme-toggle, .widget-settings-toggle {
+            display: inline-block;
+            margin-left: 5px;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--bg-main);
+            border: 2px outset var(--border-shadow-light); /* 3D эффект */
+        }
+
+        .main-screen {
+            min-height: 95vh;
+            display: block; /* Блочный режим */
+            padding: 50px 20px;
+            margin-top: 10px;
+            background-color: var(--bg-main);
+            border: 3px solid var(--accent);
+            border-top: 20px solid var(--accent);
+            position: relative;
+        }
+        .main-screen::before {
+            content: "CawNet 2000's Edition"; /* Имитация заголовка окна */
+            position: absolute;
+            top: -19px; left: 0;
+            width: 100%;
+            height: 16px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+            text-align: left;
+            padding: 0 5px;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            padding: 10px;
+            border: 3px dashed var(--accent);
+            display: block;
+        }
         h1 {
-            color: #a00;
+            font-size: 3em;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 0px var(--border-shadow-light), 2px 2px 0px var(--border-shadow-dark);
+        }
+        #greeting, #date {
+            margin-bottom: 1rem;
+            display: block;
+        }
+        #clock {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        #weather-widget {
+            margin-bottom: 2rem;
+            display: block;
         }
 
-        a {
-            color: #ae7250;
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border-shadow-dark);
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            display: inline-block; /* Для подгонки ширины */
         }
 
-        a:hover {
-            color: #f4cca0;
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+            display: block;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 60px 12px 15px;
+            font-size: 1em;
+            color: var(--text-color);
+            background: var(--bg-element);
+            border: 2px solid #000000;
+            box-shadow: inset 2px 2px 0px var(--border-shadow-dark), inset -2px -2px 0px var(--border-shadow-light);
+            outline: none;
+            display: block;
+        }
+        .search-button {
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-main);
+            border: 2px outset var(--border-shadow-light);
+            color: var(--text-color);
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        .search-button:active {
+            border: 2px inset var(--border-shadow-dark);
+        }
+        
+        /* Секция фактов */
+        .facts-section {
+            padding: 50px 20px;
+            background: var(--bg-main);
+            display: block;
+            border-top: 3px solid var(--border-shadow-dark);
+        }
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+        .fact-filters {
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .filter-btn {
+            background: #f0f0f0;
+            color: var(--text-color);
+            border: 2px outset var(--border-shadow-light);
+            padding: 5px 10px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin: 2px;
+            display: inline-block;
+        }
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            border: 2px inset var(--border-shadow-dark);
+            font-weight: bold;
+        }
+        .fact-container {
+            background: var(--bg-element);
+            border: 2px solid #000000;
+            max-width: 600px;
+            margin: 1rem auto 2rem auto;
+            padding: 2rem;
+            display: block;
+        }
+        .fact-icon {
+            font-size: 2em;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .fact-content h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2em;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .fact-text {
+            font-size: 1em;
+            min-height: 80px;
+            display: block;
         }
 
-        span#ua {
-            color: red;
+        /* Модальное окно (минималистично) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 50px;
+        }
+        .modal-content {
+            background: var(--bg-main);
+            margin: 5% auto;
+            padding: 0;
+            border: 3px solid var(--accent);
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal-header {
+            background-color: var(--accent);
+            color: white;
+            padding: 8px 15px;
+            border-bottom: 3px solid #000000;
+            display: block;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            display: inline-block;
+        }
+        .modal-close {
+            color: #ffffff;
+            font-size: 1.5em;
+            font-weight: bold;
+            float: right;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 15px;
+        }
+        .setting {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .setting label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .setting input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #000000;
+            background: var(--bg-element);
+            box-shadow: inset 1px 1px 0px var(--border-shadow-dark), inset -1px -1px 0px var(--border-shadow-light);
+        }
+        .modal-footer {
+            padding: 15px;
+            border-top: 1px solid var(--border-shadow-dark);
+            text-align: right;
         }
 
-        span#loadtime {
-            color: yellow;
-        }
-
-        .page-list {
-            column-width: 250px;
+        /* Медиазапросы для совместимости */
+        @media (max-width: 600px) {
+            h1 { font-size: 2.5em; }
+            .search-input { padding: 10px 50px 10px 10px; }
+            .search-button { width: 35px; height: 35px; font-size: 1em; }
+            .modal-content { width: 95%; margin: 20px auto; }
         }
     </style>
-    <script>
-        console.log('Hello from an inline script in the head of welcome.html');
-    </script>
-    <script src="welcome.js"></script>
 </head>
+<body>
+    <div class="corner-controls">
+        <div class="theme-toggle" id="themeToggle" title="Сменить тему">🎨</div>
+        <div class="widget-settings-toggle" id="widgetSettingsBtn" title="Настройки виджетов">⚙️</div>
+    </div>
 
-<body background="90s-bg.png">
-    <h1>Welcome to the SerenityOS web browser!</h1>
-    <p>This is a very simple browser built on the LibWeb and LibJS engines.</p>
-    <p>Your user agent is: <b><span id="ua"></span></b></p>
-    <p>This page loaded in <b><span id="loadtime"></span></b> ms</p>
-    <nav class="page-list">
-        <h2>HTML</h2>
-        <ul>
-            <li><a href="contenteditable.html">contenteditable</a></li>
-            <li><a href="many-buggies.html">many buggies</a></li>
-            <li><a href="html-escape-test.html">html character escape test</a></li>
-            <li><a href="phint.html">presentational hints</a></li>
-            <li><a href="lorem.html">lorem ipsum</a></li>
-            <li><h3>Elements</h3></li>
-            <li><a href="iframe.html">iframe</a></li>
-            <li><a href="button.html">button</a></li>
-            <li><a href="radio.html">radio button</a></li>
-            <li><a href="checkbox.html">checkbox</a></li>
-            <li><a href="form.html">form</a></li>
-            <li><a href="input.html">input</a></li>
-            <li><a href="images.html">images</a></li>
-            <li><a href="pre.html">pre</a></li>
-            <li><a href="svg.html">svg</a></li>
-            <li><a href="svg-transforms.html">svg transforms</a></li>
-            <li><a href="svg-gradients.html">svg gradients</a></li>
-            <li><a href="svg-preserve-aspect-ratio.html">svg preserveAspectRatio</a></li>
-            <li><a href="svg-fill-rule.html">svg fill-rule</a></li>
-            <li><a href="small.html">small</a></li>
-            <li><a href="link.html">link</a></li>
-            <li><a href="afrag.html">links with fragments</a></li>
-            <li><a href="blink.html">blink</a></li>
-            <li><a href="br.html">br</a></li>
-            <li><a href="progressbar.html">progressbar</a></li>
-            <li><a href="textarea.html">textarea</a></li>
-            <li><a href="noscript.html">noscript</a></li>
-        </ul>
+    <section class="main-screen">
+        <div class="logo-container">
+            <marquee behavior="scroll" direction="left" scrollamount="10" scrolldelay="50" style="font-size: 0.8em; color: #ff0000; font-weight: bold;">
+                (∩^o^)⊃━☆\*°.\* WELCOME TO CAWNET! You are visitor №: *0000001* ☆\*°.\*
+            </marquee>
+            <h1>CawNet</h1>
+        </div>
 
-        <h2>CSS</h2>
-        <ul>
-            <li><h3>CSSOM</h3></li>
-            <li><a href="attr-invalidate-style.html">Style invalidation on attribute changes</a></li>
-            <li><a href="computed-style.html">Computed style</a></li>
-            <li><a href="supports.html">CSS.supports() and @supports</a></li>
-            <li><a href="attributes.html">Attributes</a></li>
-            <li><a href="class-list.html">Class List</a></li>
-            <li><h3>Selectors</h3></li>
-            <li><a href="selectors.html">Selectors</a></li>
-            <li><a href="attrselectors.html">Attribute selectors</a></li>
-            <li><a href="more-attribute-selectors.html#target">More attribute selectors</a></li>
-            <li><a href="first-child.html">:first-child</a></li>
-            <li><a href="last-child.html">:last-child</a></li>
-            <li><a href="nth-child.html">:nth-child</a></li>
-            <li><a href="nth-last-child.html">:nth-last-child</a></li>
-            <li><a href="only-child.html">:only-child</a></li>
-            <li><a href="first-of-type.html">:first-of-type</a></li>
-            <li><a href="last-of-type.html">:last-of-type</a></li>
-            <li><a href="nth-of-type.html">:nth-of-type</a></li>
-            <li><a href="nth-last-of-type.html">:nth-last-of-type</a></li>
-            <li><a href="empty.html">:empty</a></li>
-            <li><a href="root.html">:root</a></li>
-            <li><a href="is-selector.html">:is()</a></li>
-            <li><a href="not-selector.html">:not()</a></li>
-            <li><a href="where-selector.html">:where()</a></li>
-            <li><a href="hover.html">:hover</a></li>
-            <li><a href="focus.html">:focus</a></li>
-            <li><h3>Properties</h3></li>
-            <li><a href="gradients.html">Gradients</a></li>
-            <li><a href="vertical-align.html">vertical-align</a></li>
-            <li><a href="backdrop-filter.html">backdrop-filter</a></li>
-            <li><a href="backgrounds.html">Backgrounds</a></li>
-            <li><a href="background-repeat-test.html">Background-repeat</a></li>
-            <li><a href="background-position-xy.html">Background-position-x/y</a></li>
-            <li><a href="box-shadow.html">Box-shadow</a></li>
-            <li><a href="text-shadow.html">Text-shadow</a></li>
-            <li><a href="opacity.html">Opacity</a></li>
-            <li><a href="text-decoration.html">Text-decoration</a></li>
-            <li><a href="fonts.html">Fonts</a></li>
-            <li><a href="borders.html">Borders</a></li>
-            <li><a href="border-radius.html">Border-Radius</a></li>
-            <li><a href="outline.html">Outlines</a></li>
-            <li><a href="lists.html">Lists</a></li>
-            <li><a href="flex.html">Flexboxes</a></li>
-            <li><a href="flex-order.html">Flexbox order</a></li>
-            <li><a href="justify-content.html">Flexbox justify-content</a></li>
-            <li><a href="flex-2.html">Flexboxes with unusual children</a></li>
-            <li><a href="inline-block.html">display: inline-block;</a></li>
-            <li><a href="display-grid.html">display: grid;</a></li>
-            <li><a href="display-table.html">display: table;</a></li>
-            <li><a href="inline-block-link.html">link inside display: inline-block</a></li>
-            <li><a href="padding-inline.html">inline elements with padding</a></li>
-            <li><a href="custom-properties.html">Custom Properties</a></li>
-            <li><a href="float-1.html">Floating boxes</a></li>
-            <li><a href="float-3.html">Floating boxes with overflow=hidden</a></li>
-            <li><a href="clear-1.html">Float clearing</a></li>
-            <li><a href="overflow.html">Overflow</a></li>
-            <li><a href="image-rendering.html">image-rendering property</a></li>
-            <li><a href="transform.html">Transforms</a></li>
-            <li><a href="clip.html">Clip</a></li>
-            <li><a href="cursor.html">Cursor</a></li>
-            <li><a href="accent-color.html">accent-color</a></li>
-            <li><h3>Features</h3></li>
-            <li><a href="css.html">Basic functionality</a></li>
-            <li><a href="colors.html">css colors</a></li>
-            <li><a href="palette.html">system palette color css extension</a></li>
-            <li><a href="calc.html">calc()</a></li>
-            <li><a href="css-import.html">@import</a></li>
-            <li><a href="media-queries.html">@media queries</a></li>
-            <li><a href="font-face.html">@font-face</a></li>
-            <li><a href="margin-collapse-1.html">margin collapsing 1</a></li>
-            <li><a href="margin-collapse-2.html">margin collapsing 2</a></li>
-            <li><a href="position-absolute-from-edges.html">position: absolute, offset from edges</a></li>
-            <li><a href="link-over-zindex-block.html">link elements with background box placed with z-index</a></li>
-            <li><a href="percent-css.html">Percentage values</a></li>
-            <li><a href="position-absolute-top-left.html">position: absolute; for top and left</a></li>
-            <li><a href="cascade-keywords.html">Cascade keywords (initial, inherit, unset)</a></li>
-            <li><a href="inline-node.html">Styling "inline" elements</a></li>
-            <li><a href="pseudo-elements.html">Pseudo-elements (::before, ::after, etc)</a></li>
-            <li><a href="effects_with_opacity_and_transforms.html">Effects with opacity and transforms</a></li>
-            <li><a href="css-animations.html">CSS Animations</a></li>
-        </ul>
+        <div id="greeting">Привет, Пользователь!</div>
+        <div class="time-date-container">
+            <div id="clock">12:00:00</div>
+            <div id="date">Понедельник, 1 Января 2000</div>
+            <div id="weather-widget">
+                <span id="weather-icon">☁️</span>
+                <span id="weather-temp">-- °C</span>
+                <span id="weather-city">Москва</span>
+            </div>
+        </div>
 
-        <h2>JavaScript/Wasm</h2>
-        <ul>
-            <li><a href="mouse-events.html">mouse events</a></li>
-            <li><a href="message-channel.html">MessageChannel</a></li>
-            <li><a href="websocket.html">WebSocket API Test</a></li>
-            <li><a href="event-bubbling-and-multiple-listeners.html">event bubbling and multiple listeners</a></li>
-            <li><a href="raf.html">requestAnimationFrame</a></li>
-            <li><a href="events.html">simple DOM events</a></li>
-            <li><a href="dom.html">simple DOM JS</a></li>
-            <li><a href="alert.html">alert()</a></li>
-            <li><a href="prompt.html">prompt()</a></li>
-            <li><a href="qsa.html">querySelectorAll()</a></li>
-            <li><a href="innerHTML.html">innerHTML()</a></li>
-            <li><a href="demo.html">fun demo</a></li>
-            <li><a href="set-timeout-and-interval.html">setTimeout() and setInterval()</a></li>
-            <li><a href="location.html">window.location property</a></li>
-            <li><a href="script-preparation-test.html">Test for the early return steps 6-8 of the "prepare a script" algorithm</a></li>
-            <li><a href="async-js.html">Basic test for async functions and their integration with the LibWeb event loop</a></li>
-            <li><a href="worker_parent.html">Workers</a></li>
-            <li><a href="storage.html">Web Storage API</a></li>
-            <li><a href="private-element-test.html">Test for rejecting private elements on special objects</a></li>
-            <li><a href="exceptions.html">Exceptions</a></li>
-            <li><h3>Canvas</h3></li>
-            <li><a href="canvas.html">canvas 2D test</a></li>
-            <li><a href="canvas-gradients.html">canvas gradients!</a></li>
-            <li><a href="canvas-patterns.html">canvas patterns</a></li>
-            <li><a href="canvas-rotate.html">canvas rotate()</a></li>
-            <li><a href="canvas-path-rect.html">canvas path rect test</a></li>
-            <li><a href="canvas-path-quadratic-curve.html">canvas path quadratic curve test</a></li>
-            <li><a href="img-canvas.html">canvas drawImage() test</a></li>
-            <li><a href="canvas-path.html">canvas path house!</a></li>
-            <li><a href="canvas-clip-path.html">canvas clip paths</a></li>
-            <li><a href="trigonometry.html">canvas + trigonometry functions</a></li>
-            <li><a href="canvas-global-alpha.html">canvas globalAlpha</a></li>
-            <li><a href="canvas-path2d.html">Path2D</a></li>
-            <li><a href="web-animations.html">Web Animations</a></li>
-            <li><a href="webgl-clear-color-and-multiple-contexts.html">WebGL Demo - Multiple Contexts and glClear(Color)</a></li>
-            <li><h3>Wasm</h3></li>
-            <li><a href="mandelbrot-wasm.html">WebAssembly Mandelbrot Rendering Demo</a></li>
-            <li><a href="gol-wasm.html">WebAssembly Game Of Life Demo</a></li>
-        </ul>
+        <div class="subtitle">Твоя персонализированная стартовая страница</div>
 
-        <h2>Image Formats</h2>
-        <ul>
-            <li><a href="pngsuite_siz_png.html">pngsuite odd sizes test</a></li>
-            <li><a href="pngsuite_bas_png.html">pngsuite basic formats test</a></li>
-            <li><a href="pngsuite_int_png.html">pngsuite interlacing test</a></li>
-            <li><a href="https://entropymine.com/jason/bmpsuite/bmpsuite/html/bmpsuite.html">BMP test suite</a></li>
-            <li><a href="jpg.html">JPG Images</a></li>
-            <li><a href="gifsuite.html">GIF test suite</a></li>
-            <li><a href="ddssuite.html">DDS test suite</a></li>
-            <li><a href="pbmsuite.html">PBM test suite</a></li>
-            <li><a href="pgmsuite.html">PGM test suite</a></li>
-            <li><a href="ppmsuite.html">PPM test suite</a></li>
-            <li><a href="data-url.html">"data:..." images</a></li>
-        </ul>
+        <div class="search-container">
+            <form id="searchForm">
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск в Google или быстрые команды: !y, !w...">
+                <button type="submit" class="search-button" title="Найти">🔍</button>
+            </form>
+        </div>
 
-        <h2>Test Sites</h2>
-        <ul>
-            <li><a href="acid1.html">acid1</a></li>
-            <li><a href="acid2.html">acid2</a></li>
-            <li><a href="http://serenityos.org/">serenityos.org</a></li>
-        </ul>
-    </nav>
+        <div class="scroll-indicator" onclick="scrollToNextSection()">
+            <div class="scroll-arrow" style="font-size: 1.5em;">▼</div>
+            <div class="scroll-text">Скроллить вниз</div>
+        </div>
+    </section>
+
+    <section class="facts-section" id="factsSection">
+        <h2 class="section-title">Случайный факт:</h2>
+        <div class="fact-filters" id="fact-filters">
+            </div>
+        <div class="fact-container">
+            <span class="fact-icon" id="fact-icon">💡</span>
+            <div class="fact-content">
+                <h3 id="fact-title">Загрузка...</h3>
+                <p id="fact-text" class="fact-text">Загружаю потрясающий факт...</p>
+            </div>
+        </div>
+        <button id="new-fact-btn" class="filter-btn active">Показать следующий факт</button>
+    </section>
+
+    <div id="widgetSettingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Настройки виджетов</h2>
+                <span class="modal-close" id="widgetSettingsCloseBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting">
+                    <label for="toggle-weather">Показывать погоду:</label>
+                    <input type="checkbox" id="toggle-weather">
+                </div>
+                <div class="setting">
+                    <label for="input-weather-city">Город для погоды</label>
+                    <input type="text" id="input-weather-city" placeholder="Например, Moscow">
+                </div>
+                <hr style="border-color: var(--border-shadow-dark); margin: 24px 0;">
+                <div class="setting">
+                    <label for="toggle-facts">Показывать секцию фактов:</label>
+                    <input type="checkbox" id="toggle-facts">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="widgetSettingsSaveBtn" class="filter-btn active">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="secret-link" id="secretLink" title="Секретный тест" style="position: fixed; bottom: 10px; left: 10px; font-size: 1.5em; cursor: pointer;">❓</div>
+    
     <script>
-        queueMicrotask(function() {
-            document.getElementById("loadtime").innerHTML = performance.now();
-        });
+        // --- Настройки по умолчанию ---
+        let defaultWidgetSettings = {
+            showWeather: true,
+            showFacts: true,
+            weatherCity: 'Moscow'
+        };
+        let widgetSettings = { ...defaultWidgetSettings };
+
+        // --- Факты ---
+        const facts = [
+            { category: 'tech', title: 'Интернет в 2000-х', text: 'В начале 2000-х годов скорость dial-up соединения обычно составляла 56 кбит/с, а за каждый час в Интернете нужно было платить.', icon: '☎️' },
+            { category: 'tech', title: 'Web 1.0', text: 'Ретро-дизайн начала 2000-х активно использовал HTML-таблицы для разметки, мигающие GIF-анимации и тег <marquee> для бегущей строки.', icon: '💾' },
+            { category: 'space', title: 'Марсоход «Спирит»', text: 'Марсоход «Спирит» (MER-A) был запущен в 2003 году и проработал на Марсе до 2010 года.', icon: '🚀' },
+            { category: 'nature', title: 'Светлячки', text: 'Светлячки используют биолюминесценцию, чтобы общаться и привлекать партнеров, испуская свет с эффективностью, близкой к 100%.', icon: '✨' },
+            { category: 'history', title: 'Монитор-«ящик»', text: 'В 2000-х годах почти у всех стояли ЭЛТ-мониторы (CRT), которые занимали много места.', icon: '🖥️' },
+            { category: 'tech', title: 'Flash', text: 'Adobe Flash был доминирующей технологией для интерактивных элементов и игр в веб-дизайне 2000-х.', icon: '⚡' },
+            { category: 'nature', title: 'Плутон', text: 'Плутон был реклассифицирован из планеты в карликовую планету в 2006 году.', icon: '🌌' },
+            { category: 'history', title: 'Y2K', text: 'Многие опасались «Проблемы 2000 года», считая, что компьютеры выйдут из строя, но этого не произошло.', icon: '⏰' },
+        ];
+        let currentFactIndex = -1;
+        let currentFactCategory = 'all';
+        let factChangeTimeout;
+
+        // --- Инициализация ---
+        window.onload = init;
+
+        function init() {
+            document.getElementById('searchForm').onsubmit = handleSearch;
+            document.getElementById('new-fact-btn').onclick = () => {
+                showNewFact(currentFactCategory);
+                if (factChangeTimeout) clearInterval(factChangeTimeout);
+                factChangeTimeout = setInterval(() => showNewFact(currentFactCategory), 30000);
+            };
+            document.getElementById('secretLink').onclick = setupSecretButton;
+            document.getElementById('themeToggle').onclick = toggleManualTheme;
+            document.getElementById('widgetSettingsBtn').onclick = openWidgetSettings;
+            document.getElementById('widgetSettingsCloseBtn').onclick = closeWidgetSettings;
+            document.getElementById('widgetSettingsSaveBtn').onclick = saveWidgetSettings;
+
+            loadWidgetSettings();
+
+            updateClock();
+            updateTimeOfDay();
+            fetchWeather();
+            showNewFact(currentFactCategory);
+            renderFactFilters();
+
+            factChangeTimeout = setInterval(() => showNewFact(currentFactCategory), 30000);
+            setInterval(updateClock, 1000);
+            setInterval(updateTimeOfDay, 60000);
+
+            updateLayoutVisibility();
+        }
+
+        // --- Управление видимостью виджетов ---
+        function loadWidgetSettings() {
+            try {
+                const stored = localStorage.getItem('cawnet_widget_settings');
+                widgetSettings = stored ? JSON.parse(stored) : { ...defaultWidgetSettings };
+            } catch (e) {
+                widgetSettings = { ...defaultWidgetSettings };
+            }
+            const t = widgetSettings;
+            const elToggleWeather = document.getElementById('toggle-weather');
+            const elToggleFacts = document.getElementById('toggle-facts');
+            const elCity = document.getElementById('input-weather-city');
+            if (elToggleWeather) elToggleWeather.checked = !!t.showWeather;
+            if (elToggleFacts) elToggleFacts.checked = !!t.showFacts;
+            if (elCity) elCity.value = t.weatherCity || defaultWidgetSettings.weatherCity;
+        }
+
+        function saveWidgetSettings() {
+            const weatherToggle = document.getElementById('toggle-weather');
+            const factsToggle = document.getElementById('toggle-facts');
+            const cityInput = document.getElementById('input-weather-city');
+
+            const newSettings = {
+                showWeather: weatherToggle ? weatherToggle.checked : defaultWidgetSettings.showWeather,
+                showFacts: factsToggle ? factsToggle.checked : defaultWidgetSettings.showFacts,
+                weatherCity: cityInput ? cityInput.value.trim() : defaultWidgetSettings.weatherCity,
+            };
+
+            widgetSettings = newSettings;
+            localStorage.setItem('cawnet_widget_settings', JSON.stringify(newSettings));
+            updateLayoutVisibility();
+            fetchWeather();
+            closeWidgetSettings();
+        }
+
+        function updateLayoutVisibility() {
+            const weatherEl = document.getElementById('weather-widget');
+            const factsSectionEl = document.getElementById('factsSection');
+            const scrollIndicatorEl = document.querySelector('.scroll-indicator');
+
+            if (weatherEl) weatherEl.style.display = widgetSettings.showWeather ? 'block' : 'none';
+            if (factsSectionEl) factsSectionEl.style.display = widgetSettings.showFacts ? 'block' : 'none';
+            if (scrollIndicatorEl) scrollIndicatorEl.style.display = widgetSettings.showFacts ? 'block' : 'none';
+        }
+
+        function openWidgetSettings() {
+            loadWidgetSettings();
+            document.getElementById('widgetSettingsModal').style.display = 'block';
+        }
+
+        function closeWidgetSettings() {
+            document.getElementById('widgetSettingsModal').style.display = 'none';
+        }
+
+        // --- Поиск ---
+        function handleSearch(event) {
+            event.preventDefault();
+            const input = document.getElementById('searchInput');
+            const q = input.value.trim();
+            if (!q) return;
+
+            const lower = q.toLowerCase();
+            // Простейшие команды без регулярных выражений
+            if (lower.startsWith('!y')) {
+                const actual = q.substring(2).trim();
+                window.location.href = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(actual);
+                return;
+            }
+            if (lower.startsWith('!w')) {
+                const actual = q.substring(2).trim();
+                window.location.href = 'https://ru.wikipedia.org/wiki/Служебная:Search?search=' + encodeURIComponent(actual);
+                return;
+            }
+
+            // Поиск по умолчанию (Google)
+            window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+        }
+
+        // --- Часы и время суток ---
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = hours + ':' + minutes + ':' + seconds;
+
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            // Используем toLocaleDateString, но без сложных параметров для максимальной совместимости
+            document.getElementById('date').textContent = now.toDateString(); 
+        }
+
+        function updateTimeOfDay() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greetingText;
+
+            if (hour >= 6 && hour < 12) greetingText = 'Доброе утро!';
+            else if (hour >= 12 && hour < 18) greetingText = 'Добрый день!';
+            else if (hour >= 18 && hour < 22) greetingText = 'Добрый вечер!';
+            else greetingText = 'Доброй ночи!';
+
+            document.getElementById('greeting').textContent = greetingText;
+        }
+
+        // --- Погода (заглушка для чистоты) ---
+        function fetchWeather() {
+            if (!widgetSettings.showWeather) return;
+
+            const iconEl = document.getElementById('weather-icon');
+            const tempEl = document.getElementById('weather-temp');
+            const cityEl = document.getElementById('weather-city');
+            const CITY_NAME = widgetSettings.weatherCity || defaultWidgetSettings.weatherCity;
+
+            // В целях максимальной совместимости и чистоты кода, 
+            // реальный API запрос (fetch) удален. Используется заглушка.
+            
+            iconEl.textContent = '☁️';
+            tempEl.textContent = '15 °C';
+            cityEl.textContent = CITY_NAME;
+        }
+
+        // --- Скролл ---
+        function scrollToNextSection() {
+            const factsSection = document.getElementById('factsSection');
+            if (factsSection) factsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Кнопка смены темы ---
+        function toggleManualTheme() {
+            // В целях чистоты кода, сложная смена тем удалена. 
+            // Здесь можно просто изменить цвет фона body, если нужно.
+            const body = document.body;
+            if (body.style.backgroundColor === 'rgb(0, 128, 128)') {
+                body.style.backgroundColor = '#d0d0d0'; // Светло-серый
+            } else {
+                body.style.backgroundColor = 'rgb(0, 128, 128)'; // Вернуть бирюзовый
+            }
+        }
+
+        // --- Факты ---
+        function renderFactFilters() {
+            const container = document.getElementById('fact-filters');
+            container.innerHTML = '';
+            const cats = ['all', 'tech', 'space', 'nature', 'history'];
+            const map = { all: 'Все', tech: 'Технологии', space: 'Космос', nature: 'Природа', history: 'История' };
+
+            cats.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (cat === currentFactCategory ? ' active' : '');
+                btn.textContent = map[cat] || cat;
+                btn.onclick = () => {
+                    currentFactCategory = cat;
+                    renderFactFilters();
+                    showNewFact(currentFactCategory);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function getFilteredFacts(category) {
+            if (category === 'all') return facts;
+            return facts.filter(f => f.category === category);
+        }
+
+        function showNewFact(category) {
+            const filteredFacts = getFilteredFacts(category);
+            if (filteredFacts.length === 0) {
+                document.getElementById('fact-title').textContent = 'Нет фактов';
+                document.getElementById('fact-text').textContent = 'В этой категории нет фактов.';
+                document.getElementById('fact-icon').textContent = '❓';
+                return;
+            }
+
+            let nextIndex;
+            do {
+                nextIndex = Math.floor(Math.random() * filteredFacts.length);
+            } while (filteredFacts.length > 1 && nextIndex === currentFactIndex);
+            
+            currentFactIndex = nextIndex;
+            const fact = filteredFacts[currentFactIndex];
+
+            document.getElementById('fact-icon').textContent = fact.icon;
+            document.getElementById('fact-title').textContent = fact.title;
+            document.getElementById('fact-text').textContent = fact.text;
+        }
+
+        // --- Секретная кнопка ---
+        function setupSecretButton() {
+            console.log("/===============================\\ ");
+            console.log("|  HAVE YOU TRIED TURNING IT    |");
+            console.log("|  OFF AND ON AGAIN? (Y2K BUG)  |");
+            console.log("\\===============================/ ");
+            alert("ACCESS GRANTED. CHECK CONSOLE FOR SECRET.");
+        }
     </script>
 </body>
-
 </html>

@@ -168,7 +168,7 @@ void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
 {
     m_system_menu = move(system_menu);
 
-    m_start_button = GUI::Button::construct("Serenity"_string);
+    m_start_button = GUI::Button::construct("CawOS"_string);
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);

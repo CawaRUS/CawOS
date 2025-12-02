@@ -26,7 +26,7 @@ ErrorOr<String> read_long_version_string()
 
     return String::formatted("Version {} revision {}", version, git_hash);
 #else
-    return "Version 1.0"_string;
+    return "Version 0.0"_string;
 #endif
 }
 

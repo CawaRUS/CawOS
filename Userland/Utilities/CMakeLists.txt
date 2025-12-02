@@ -157,6 +157,7 @@ set(CMD_SOURCES_CPP
     shred.cpp
     shuf.cpp
     shutdown.cpp
+    panic.cpp
     sizefmt.cpp
     sleep.cpp
     slugify.cpp
@@ -167,6 +168,7 @@ set(CMD_SOURCES_CPP
     strings.cpp
     stty.cpp
     su.cpp
+    playsound.cpp
     sync.cpp
     syscall.cpp
     sysctl.cpp
@@ -240,7 +242,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip install keymap lsdev lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
-    nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
+    nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip playsound
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
@@ -297,6 +299,7 @@ install(CODE "file(CREATE_LINK gzip ${CMAKE_INSTALL_PREFIX}/bin/gunzip SYMBOLIC)
 install(CODE "file(CREATE_LINK gzip ${CMAKE_INSTALL_PREFIX}/bin/zcat SYMBOLIC)")
 install(CODE "file(CREATE_LINK /usr/lib/Loader.so ${CMAKE_INSTALL_PREFIX}/bin/ldd SYMBOLIC)")
 
+target_link_libraries(panic PRIVATE LibCore LibSystem)
 target_link_libraries(abench PRIVATE LibAudio LibFileSystem)
 target_link_libraries(aconv PRIVATE LibAudio LibFileSystem)
 target_link_libraries(animation PRIVATE LibGfx)
@@ -392,6 +395,7 @@ target_link_libraries(userdel PRIVATE LibFileSystem)
 target_link_libraries(usermod PRIVATE LibFileSystem)
 target_link_libraries(wallpaper PRIVATE LibGfx LibGUI)
 target_link_libraries(wasm PRIVATE LibFileSystem LibJS LibLine LibWasm)
+target_link_libraries(playsound PRIVATE LibCore LibAudio)
 target_link_libraries(watch PRIVATE LibFileSystem)
 target_link_libraries(wsctl PRIVATE LibGUI LibIPC)
 target_link_libraries(xml PRIVATE LibFileSystem LibXML LibURL)
