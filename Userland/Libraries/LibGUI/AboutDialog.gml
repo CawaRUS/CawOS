@@ -45,10 +45,10 @@
             }
 
             @GUI::Label {
-                name: "serenity_os"
+                name: "caw_os"
                 text_alignment: "CenterLeft"
                 fixed_height: 14
-                text: "SerenityOS"
+                text: "CawOS"
             }
 
             @GUI::Label {
@@ -61,7 +61,7 @@
                 name: "copyright"
                 text_alignment: "CenterLeft"
                 fixed_height: 14
-                text: "Copyright © the SerenityOS developers, 2018-2025"
+                text: "Copyright © the CawOS developers, 2025-2025"
             }
 
             @GUI::Layout::Spacer {}
