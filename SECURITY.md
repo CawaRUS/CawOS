@@ -1,3 +1,6 @@
 # Security Policy
 
-SerenityOS is a hobby operating system developed by volunteers. It is unreleased software still in early development, and so bugs and vulnerabilities can be safely disclosed publicly. If you find an issue, we would prefer if you report it as a [GitHub issue](https://github.com/SerenityOS/serenity/issues/new). If your issue was found using a fuzzer, please check [oss-fuzz](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=label:Proj-serenity) first to see if it has already been recorded.
+CawOS — это хобби-операционная система, разрабатываемая добровольцами. Это нерелизное программное обеспечение, находящееся на ранней стадии разработки, поэтому найденные ошибки и уязвимости могут быть безопасно раскрыты публично.
+
+Если вы обнаружите проблему, мы просим вас сообщить о ней как о [**GitHub Issue**](https://github.com/CawaRUS/cawos/issues/new) в нашем репозитории.
+
