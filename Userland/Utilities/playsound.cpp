@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView sound_name;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(sound_name, "Sound to play (startup|notify|shutdown)", "sound");
+    parser.add_positional_argument(sound_name, "Sound to play (startup|notify|shutdown|error|usb_e|usb_c|usb_d)", "sound");
     parser.parse(arguments);
 
     pid_t pid = fork();
@@ -45,8 +45,16 @@ ErrorOr<int> play_sound(AK::StringView sound_name)
         path = "/res/sound/CawOS_Notify.wav"sv;
     else if (sound_name == "shutdown")
         path = "/res/sound/CawOS_Shutdown.wav"sv;
+    else if (sound_name == "error")
+        path = "/res/sound/CawOS_Error.wav"sv;
+    else if (sound_name == "usb_e")
+        path = "/res/sound/CawOS_USB_Error.wav"sv;
+    else if (sound_name == "usb_c")
+        path = "/res/sound/CawOS_USB_Connect.wav"sv;
+    else if (sound_name == "usb_d")
+        path = "/res/sound/CawOS_USB_Disconnect.wav"sv;
     else {
-        warnln("Unknown sound: {}. Available: startup, notify, shutdown", sound_name);
+        warnln("Unknown sound: {}. Available: startup, notify, shutdown, error, usb_e, usb_c, usb_d", sound_name);
         return 1;
     }
 
