@@ -5,7 +5,7 @@ on: [push, pull_request_target]
 jobs:
   notify_discord:
     runs-on: ubuntu-24.04
-    if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request_target' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+    if: always() && github.repository == 'CawaRUS/CawOS' && (github.event_name == 'pull_request_target' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
 
     steps:
       - name: Discord action notification
