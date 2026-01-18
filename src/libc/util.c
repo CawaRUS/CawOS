@@ -24,3 +24,8 @@ int strncmp(char* s1, char* s2, int n) {
     }
     return 0;
 }
+
+void memset(void* dest, unsigned char val, int len) {
+    unsigned char* temp = (unsigned char*)dest;
+    for ( ; len != 0; len--) *temp++ = val;
+}

@@ -5,28 +5,34 @@ echo Building CawOS...
 :: Создаем папку build, если её нет
 if not exist build mkdir build
 
-:: 1. Ассемблируем загрузчик и вход в ядро
-echo [ASM] Assembling boot and entry...
+:: 1. Ассемблируем загрузчик, вход в ядро и ПРЕРЫВАНИЯ
+echo [ASM] Assembling boot, entry and interrupts...
 nasm src/boot/boot.asm -f bin -o build/boot.bin
 nasm src/boot/kernel_entry.asm -f elf32 -o build/kernel_entry.o
+:: НОВОЕ: Компилируем ассемблерные обертки прерываний
+nasm src/cpu/interrupt.asm -f elf32 -o build/interrupt.o
 
-:: 2. Компилируем Си-файлы (добавлен -Iinclude для поиска заголовков)
+:: 2. Компилируем Си-файлы
 echo [C] Compiling kernel modules...
 i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/kernel/kernel.c -o build/kernel.o
 i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/drivers/io.c -o build/io.o
 i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/drivers/screen.c -o build/screen.o
 i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/fs/fs.c -o build/fs.o
 i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/libc/util.c -o build/util.o
+:: НОВОЕ: Компилируем логику IDT
+i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/cpu/idt.c -o build/idt.o
 
-:: 3. Линкуем всё в один ELF (используем linker.ld из папки scripts)
+:: 3. Линкуем всё в один ELF
 echo [LD] Linking kernel.elf...
 i686-elf-ld -m elf_i386 -T scripts/linker.ld -nostdlib ^
 build/kernel_entry.o ^
+build/interrupt.o ^
 build/kernel.o ^
 build/io.o ^
 build/screen.o ^
 build/fs.o ^
 build/util.o ^
+build/idt.o ^
 -o build/kernel.elf
 
 :: 4. Извлекаем чистый бинарный код ядра
@@ -34,8 +40,8 @@ i686-elf-objcopy -O binary build/kernel.elf build/kernel.bin
 
 :: 5. Собираем финальный образ
 echo [BIN] Creating os-image.bin...
-:: Создаем Padding (20КБ)
-fsutil file createnew build/pad.bin 20480 > nul
+:: Увеличим Padding до 40КБ на всякий случай, так как ядро растет
+fsutil file createnew build/pad.bin 40960 > nul
 copy /b build\boot.bin + build\kernel.bin + build\pad.bin os-image.bin > nul
 
 echo Done! CawOS image is ready.

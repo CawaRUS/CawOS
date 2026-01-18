@@ -3,6 +3,11 @@
 #include "util.h"
 #include "screen.h"
 #include "fs.h"
+#include "idt.h"
+
+// Сообщаем ядру, что эти функции лежат в idt.o
+extern void watchdog_reset();
+extern void watchdog_check();
 
 void __main() {}
 
@@ -11,19 +16,18 @@ void execute_command(char* input, int* row);
 void shutdown() {
     print_at_color("System Halting...", 24, 0, 0x0C);
     port_word_out(0x604, 0x2000);  // QEMU
-    port_word_out(0xB004, 0x2000); // Bochs
-    port_word_out(0x4004, 0x3400); // VBox
     while(1) { __asm__("hlt"); }
 }
 
 void main() {
+    idt_init();
     init_fs();
     clear_screen();
     draw_logo();      
     beep();           
     
     clear_screen();
-    print_at_color("CawOS v0.1. Just a OS.", 0, 0, 0x0B);
+    print_at_color("CawOS v0.1.5. Just a OS.", 0, 0, 0x0B);
     print_at("Type 'help' to see all commands.", 1, 0);
     
     char key_buffer[256];
@@ -33,17 +37,17 @@ void main() {
     update_cursor(row, col);
 
     while(1) {
-        // Проверка готовности клавиатуры (PS/2 controller)
+        // "Кормим собаку" в каждой итерации цикла
+        watchdog_reset();
+;
         if (port_byte_in(0x64) & 0x01) {
             unsigned char scancode = port_byte_in(0x60);
             
-            // Нажатие клавиши (scancode < 0x80)
             if (scancode < 0x80) {
                 if (scancode == ENTER) {
                     key_buffer[buffer_idx] = '\0';
                     row++; 
                     
-                    // Выполняем команду, только если буфер не пуст
                     if (buffer_idx > 0) {
                         execute_command(key_buffer, &row);
                         row++; 
@@ -52,8 +56,7 @@ void main() {
                     buffer_idx = 0; 
                     col = 2;
 
-                    // Скроллинг (примитивная очистка)
-                    if (row >= 24) { 
+                    if (row >= 22) { // Запас в 2 строки, чтобы не прыгало
                         clear_screen(); 
                         row = 0; 
                     }
@@ -77,11 +80,9 @@ void main() {
                         print_at(str, row, col);
                         col++;
                         
-                        // Автоматический перенос строки
-                        if (col >= 79) { 
+                        if (col >= 78) { 
                             col = 2; 
                             row++; 
-                            if (row >= 24) { clear_screen(); row = 0; }
                             print_at("> ", row, 0); 
                         }
                         update_cursor(row, col);
@@ -215,6 +216,10 @@ void execute_command(char* input, int* row) {
         return; 
     }
 
+    if (strcmp(input, "freeze") == 0) {
+        print_at("System will freeze now...", *row, 0);
+        while(1); // Имитируем зависание ядра
+    }
     // Если ничего не подошло
     if (input[0] != '\0') {
         print_at_color("Unknown command!", *row, 0, 0x0C);

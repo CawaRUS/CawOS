@@ -3,8 +3,8 @@ extern main
 global _start
 
 _start:
-    mov esp, 0x90000
-    and esp, 0xFFFFFFF0 ; Выравнивание стека по 16 байт (GCC это обожает)
-    sub esp, 12         ; Padding для вызова
+    ; Не нужно переназначать ESP здесь, мы уже сделали это в boot.asm
+    ; Но если хочешь подстраховаться, используй тот же адрес:
+    mov esp, 0x7FFFF
     call main
     jmp $

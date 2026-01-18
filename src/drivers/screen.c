@@ -44,7 +44,7 @@ void nosound() { port_byte_out(0x61, port_byte_in(0x61) & 0xFC); }
 
 void beep() {
     play_sound(1000);
-    for(volatile int i = 0; i < 5000000; i++); 
+    for(volatile int i = 0; i < 50000000; i++); 
     nosound();
 }
 
