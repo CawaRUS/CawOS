@@ -2,27 +2,12 @@ ENTRY(_start)
 
 SECTIONS
 {
-    
     . = 0x1000;
 
-    .text : ALIGN(4096)
-    {
-        *(.text)
-    }
+    .text   : { *(.text) }
+    .rodata : { *(.rodata*) }
+    .data   : { *(.data) }
+    .bss    : { *(.bss) *(COMMON) }
 
-    .rodata : ALIGN(4096)
-    {
-        *(.rodata*)
-    }
-
-    .data : ALIGN(4096)
-    {
-        *(.data)
-    }
-
-    .bss : ALIGN(4096)
-    {
-        *(COMMON)
-        *(.bss)
-    }
+    /DISCARD/ : { *(.comment) *(.eh_frame) }
 }

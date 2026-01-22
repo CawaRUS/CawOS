@@ -4,30 +4,45 @@
 #include "screen.h"
 #include "fs.h"
 #include "idt.h"
+#include "vga.h"
+#include "gui.h"
 
-// Сообщаем ядру, что эти функции лежат в idt.o
+// Внешние функции
 extern void watchdog_reset();
 extern void watchdog_check();
+extern void vga_enter_mode13h();
+extern unsigned short get_total_memory();
+extern void itoa(int n, char str[]);
+extern int strlen(char* s);
 
-void __main() {}
-
+// Прототипы функций (ОБЯЗАТЕЛЬНО с точкой с запятой)
+void draw_pixel(int x, int y, unsigned char color);
 void execute_command(char* input, int* row);
+
+// Оболочка GUI (теперь с телом функции)
+extern void start_kgui();
+
+void __main() {} // Пустая функция для некоторых линковщиков
 
 void shutdown() {
     print_at_color("System Halting...", 24, 0, 0x0C);
-    port_word_out(0x604, 0x2000);  // QEMU
+    port_word_out(0x604, 0x2000);  // Выключение для QEMU
     while(1) { __asm__("hlt"); }
 }
 
 void main() {
     idt_init();
     init_fs();
+    unsigned char* mode_ptr = (unsigned char*)0x449;
+    if (*mode_ptr == 0x13) {
+        start_kgui(); // Уходим в GUI и никогда не возвращаемся сюда
+    }
     clear_screen();
     draw_logo();      
     beep();           
     
     clear_screen();
-    print_at_color("CawOS v0.1.5. Just a OS.", 0, 0, 0x0B);
+    print_at_color("CawOS v0.2 Just a OS.", 0, 0, 0x0B);
     print_at("Type 'help' to see all commands.", 1, 0);
     
     char key_buffer[256];
@@ -37,9 +52,8 @@ void main() {
     update_cursor(row, col);
 
     while(1) {
-        // "Кормим собаку" в каждой итерации цикла
         watchdog_reset();
-;
+
         if (port_byte_in(0x64) & 0x01) {
             unsigned char scancode = port_byte_in(0x60);
             
@@ -56,7 +70,7 @@ void main() {
                     buffer_idx = 0; 
                     col = 2;
 
-                    if (row >= 22) { // Запас в 2 строки, чтобы не прыгало
+                    if (row >= 22) {
                         clear_screen(); 
                         row = 0; 
                     }
@@ -183,7 +197,25 @@ void execute_command(char* input, int* row) {
     }
     
     if (strcmp(input, "info") == 0) {
-        print_at("CawOS 0.1 | Kernel: i686-C | Mode: Real->Protected", *row, 0);
+        char vendor[13];
+        char mem_str[16];
+        get_cpu_info(vendor);
+        
+        // Получаем реальную память
+        int mem_mb = get_total_memory() + 1; // +1МБ базовой памяти
+        itoa(mem_mb, mem_str);
+
+        print_at("CawOS v0.1.5", *row, 0); (*row)++;
+        
+        print_at("CPU: ", *row, 0); 
+        print_at(vendor, *row, 5); (*row)++;
+        
+        print_at("RAM: ", *row, 0); 
+        print_at(mem_str, *row, 5); 
+        print_at(" MB", *row, 5 + strlen(mem_str)); (*row)++;
+        
+        // Для дисплея вытащим инфу о типе
+        print_at("Display: VGA Color (80x25)", *row, 0); 
         return;
     }
     

@@ -3,8 +3,6 @@ extern main
 global _start
 
 _start:
-    ; Не нужно переназначать ESP здесь, мы уже сделали это в boot.asm
-    ; Но если хочешь подстраховаться, используй тот же адрес:
-    mov esp, 0x7FFFF
-    call main
+    mov esp, 0x7FFFF ; Ставим стек
+    call main        ; Уходим в ядро
     jmp $

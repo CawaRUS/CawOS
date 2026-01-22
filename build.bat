@@ -1,48 +1,74 @@
 @echo off
 setlocal enabledelayedexpansion
-echo Building CawOS...
+color 07
+echo =================================
+echo         Building CawOS
+echo =================================
 
-:: Создаем папку build, если её нет
+:: Проверка наличия компилятора
+i686-elf-gcc --version >nul 2>&1
+if %errorlevel% neq 0 (
+    color 0C
+    echo [ERROR] i686-elf-gcc not found in PATH!
+    pause
+    exit /b
+)
+
+:: Создаем структуру
 if not exist build mkdir build
 
-:: 1. Ассемблируем загрузчик, вход в ядро и ПРЕРЫВАНИЯ
-echo [ASM] Assembling boot, entry and interrupts...
-nasm src/boot/boot.asm -f bin -o build/boot.bin
-nasm src/boot/kernel_entry.asm -f elf32 -o build/kernel_entry.o
-:: НОВОЕ: Компилируем ассемблерные обертки прерываний
-nasm src/cpu/interrupt.asm -f elf32 -o build/interrupt.o
+:: Очистка
+echo [CLEAN] Removing old binaries...
+del /f /q build\*.bin build\*.o build\*.elf os-image.bin 2>nul
 
-:: 2. Компилируем Си-файлы
-echo [C] Compiling kernel modules...
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/kernel/kernel.c -o build/kernel.o
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/drivers/io.c -o build/io.o
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/drivers/screen.c -o build/screen.o
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/fs/fs.c -o build/fs.o
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/libc/util.c -o build/util.o
-:: НОВОЕ: Компилируем логику IDT
-i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c src/cpu/idt.c -o build/idt.o
+:: 1. Ассемблер (статичные файлы)
+echo [ASM] Assembling boot and low-level code...
+nasm src/boot/boot.asm -f bin -o build/boot.bin || goto :error
+nasm src/boot/kernel_entry.asm -f elf32 -o build/kernel_entry.o || goto :error
+nasm src/cpu/interrupt.asm -f elf32 -o build/interrupt.o || goto :error
 
-:: 3. Линкуем всё в один ELF
+:: 2. Компиляция всех .c файлов автоматически
+echo [C] Compiling all kernel modules...
+set C_FLAGS=-ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -Wall -O0 -c
+set "OBJ_FILES="
+
+:: Рекурсивный поиск всех .c файлов в папке src
+for /r src %%f in (*.c) do (
+    echo   Compiling %%~nxf...
+    i686-elf-gcc %C_FLAGS% "%%f" -o "build\%%~nf.o" || goto :error
+    :: Добавляем объектный файл в список для линковки
+    set "OBJ_FILES=!OBJ_FILES! build\%%~nf.o"
+)
+
+:: 3. Линковка
 echo [LD] Linking kernel.elf...
+:: Линкуем ассемблерные заглушки + все найденные объектники
 i686-elf-ld -m elf_i386 -T scripts/linker.ld -nostdlib ^
-build/kernel_entry.o ^
-build/interrupt.o ^
-build/kernel.o ^
-build/io.o ^
-build/screen.o ^
-build/fs.o ^
-build/util.o ^
-build/idt.o ^
--o build/kernel.elf
+build/kernel_entry.o build/interrupt.o !OBJ_FILES! ^
+-o build/kernel.elf || goto :error
 
-:: 4. Извлекаем чистый бинарный код ядра
+:: 4. Извлечение бинарника
+echo [OBJ] Extracting kernel.bin...
 i686-elf-objcopy -O binary build/kernel.elf build/kernel.bin
 
-:: 5. Собираем финальный образ
-echo [BIN] Creating os-image.bin...
-:: Увеличим Padding до 40КБ на всякий случай, так как ядро растет
-fsutil file createnew build/pad.bin 40960 > nul
+:: 5. Сборка образа с ПАДДИНГОМ
+echo [BIN] Finalizing os-image.bin...
+if exist build\pad.bin del /f /q build\pad.bin
+fsutil file createnew build\pad.bin 32768 > nul
+
 copy /b build\boot.bin + build\kernel.bin + build\pad.bin os-image.bin > nul
 
-echo Done! CawOS image is ready.
+echo.
+color 0A
+echo [SUCCESS] CawOS is ready to fly!
+for %%I in (os-image.bin) do echo Final Image Size: %%~zI bytes
+echo.
 pause
+exit /b
+
+:error
+color 0C
+echo.
+echo [FATAL ERROR] Build failed! Check the logs above.
+pause
+exit /b
