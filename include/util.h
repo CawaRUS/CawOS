@@ -1,15 +1,17 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-int strcmp(char* s1, char* s2);
-void strcpy(char* dest, char* src);
+// Строковые функции (теперь с const, чтобы не было ворнингов в командах)
+int strcmp(const char* s1, const char* s2);
+int strncmp(const char* s1, const char* s2, int n);
+int strlen(const char* s);
+
+void strcpy(char* dest, const char* src); // src тоже const, мы его только читаем
 void memset(void* dest, unsigned char val, int len);
-int strncmp(char* s1, char* s2, int n);
 
+// Системные функции
 void get_cpu_info(char* buffer);
-
-extern unsigned short get_total_memory();
-extern void itoa(int n, char str[]);
-extern int strlen(char* s);
+unsigned short get_total_memory();
+void itoa(int n, char str[]);
 
 #endif

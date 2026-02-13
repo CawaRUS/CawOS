@@ -21,22 +21,28 @@ isr32:
     jmp isr_common_stub
 
 isr_common_stub:
-    pusha
-    mov ax, ds
-    push eax       ; Сохраняем DS
+    pusha               ; Пушит eax, ecx, edx, ebx, esp, ebp, esi, edi
     
-    mov ax, 0x10
+    mov ax, ds          ; Сохраняем текущий DS
+    push eax            
+    
+    mov ax, 0x10        ; Загружаем сегмент данных ядра
     mov ds, ax
     mov es, ax
+    mov fs, ax
+    mov gs, ax
 
-    push esp       ; Передаем ВЕСЬ стек как структуру registers
+    push esp            ; Передаем указатель на структуру registers r
     call isr_handler
-    add esp, 4     ; Убираем только пуш esp
     
-    pop eax        ; Восстанавливаем DS
+    add esp, 4          ; Очищаем указатель (esp)
+    
+    pop eax             ; Восстанавливаем оригинальный DS
     mov ds, ax
     mov es, ax
+    mov fs, ax
+    mov gs, ax
     
-    popa
-    add esp, 8     ; Убираем int_no и err_code
-    iret
+    popa                ; Восстанавливаем все регистры
+    add esp, 8          ; Очищаем номера прерываний (int_no и err_code)
+    iret                ; ВОЗВРАЩАЕМСЯ В ОС

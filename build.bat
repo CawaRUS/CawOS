@@ -1,74 +1,76 @@
 @echo off
 setlocal enabledelayedexpansion
 color 07
+
 echo =================================
-echo         Building CawOS
+echo          Building CawOS
 echo =================================
 
-:: Проверка наличия компилятора
-i686-elf-gcc --version >nul 2>&1
-if %errorlevel% neq 0 (
-    color 0C
-    echo [ERROR] i686-elf-gcc not found in PATH!
-    pause
-    exit /b
-)
+:: 1. ASM
+echo [ASM] Compiling low-level objects...
+nasm src/boot/kernel_entry.asm -f elf32 -o build/kernel_entry.o || goto error
+nasm src/cpu/interrupt.asm -f elf32 -o build/interrupt.o || goto error
 
-:: Создаем структуру
-if not exist build mkdir build
-
-:: Очистка
-echo [CLEAN] Removing old binaries...
-del /f /q build\*.bin build\*.o build\*.elf os-image.bin 2>nul
-
-:: 1. Ассемблер (статичные файлы)
-echo [ASM] Assembling boot and low-level code...
-nasm src/boot/boot.asm -f bin -o build/boot.bin || goto :error
-nasm src/boot/kernel_entry.asm -f elf32 -o build/kernel_entry.o || goto :error
-nasm src/cpu/interrupt.asm -f elf32 -o build/interrupt.o || goto :error
-
-:: 2. Компиляция всех .c файлов автоматически
-echo [C] Compiling all kernel modules...
-set C_FLAGS=-ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -Wall -O0 -c
-set "OBJ_FILES="
-
-:: Рекурсивный поиск всех .c файлов в папке src
+:: 2. C модули (Упрощенная компиляция всех .c файлов)
+echo [C] Compiling kernel modules...
 for /r src %%f in (*.c) do (
-    echo   Compiling %%~nxf...
-    i686-elf-gcc %C_FLAGS% "%%f" -o "build\%%~nf.o" || goto :error
-    :: Добавляем объектный файл в список для линковки
-    set "OBJ_FILES=!OBJ_FILES! build\%%~nf.o"
+    :: Пропускаем файлы из папки bin, они компилируются отдельно позже
+    echo %%f | findstr /I "\\bin\\" >nul
+    if !errorlevel! neq 0 (
+        echo   Compiling %%~nxf...
+        :: Чтобы не было коллизий, добавляем префикс пути к имени .o файла
+        i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -Wall -O2 -c "%%f" -o "build/%%~nf.o" || goto error
+    )
 )
 
-:: 3. Линковка
+:: 3. Сбор списка объектников (kernel_entry ОБЯЗАТЕЛЬНО первым)
+set "CORE_OBJS=build/kernel_entry.o build/interrupt.o"
+for %%i in (build\*.o) do (
+    if not "%%~nxi"=="kernel_entry.o" (
+        if not "%%~nxi"=="interrupt.o" (
+            set "CORE_OBJS=!CORE_OBJS! build\%%~nxi"
+        )
+    )
+)
+
+:: 4. Линковка
 echo [LD] Linking kernel.elf...
-:: Линкуем ассемблерные заглушки + все найденные объектники
-i686-elf-ld -m elf_i386 -T scripts/linker.ld -nostdlib ^
-build/kernel_entry.o build/interrupt.o !OBJ_FILES! ^
--o build/kernel.elf || goto :error
+i686-elf-ld -m elf_i386 -T scripts/linker.ld -nostdlib !CORE_OBJS! -o build/kernel.elf || goto error
 
-:: 4. Извлечение бинарника
-echo [OBJ] Extracting kernel.bin...
-i686-elf-objcopy -O binary build/kernel.elf build/kernel.bin
+:: 5. Бинарник
+i686-elf-objcopy -O binary build/kernel.elf build/kernel.bin || goto error
 
-:: 5. Сборка образа с ПАДДИНГОМ
-echo [BIN] Finalizing os-image.bin...
-if exist build\pad.bin del /f /q build\pad.bin
-fsutil file createnew build\pad.bin 32768 > nul
+:: 6. Приложения
+echo [BIN] Compiling user programs...
+if not exist build\apps mkdir build\apps
+for %%a in (src/bin/*.c) do (
+    echo   App: %%~nxa...
+    i686-elf-gcc -ffreestanding -fno-pie -fno-stack-protector -m32 -Iinclude -c "%%a" -o "build/apps/%%~na.o" || goto error
+    i686-elf-ld -m elf_i386 -Ttext 0x50000 --oformat binary "build/apps/%%~na.o" -o "build/apps/%%~na.bin" || goto error
+)
 
-copy /b build\boot.bin + build\kernel.bin + build\pad.bin os-image.bin > nul
+:: 7. Загрузчик
+for %%I in (build\kernel.bin) do set "K_SIZE=%%~zI"
+set /a K_SECTORS=(%K_SIZE% / 512) + 1
+nasm src/boot/boot.asm -f bin -dKERNEL_SECTORS=%K_SECTORS% -o build/boot.bin || goto error
+
+:: 8. Склейка
+echo [IMAGE] Creating final image...
+copy /b build\boot.bin + build\kernel.bin os-image.bin > nul
+
+if exist scripts/pack_fs.py (
+    python scripts/pack_fs.py os-image.bin build/apps/
+)
 
 echo.
 color 0A
-echo [SUCCESS] CawOS is ready to fly!
-for %%I in (os-image.bin) do echo Final Image Size: %%~zI bytes
-echo.
+echo [SUCCESS] CawOS is ready!
 pause
 exit /b
 
 :error
-color 0C
 echo.
-echo [FATAL ERROR] Build failed! Check the logs above.
+color 0C
+echo [ERROR] Build failed! Check the output above.
 pause
-exit /b
+exit /b 1

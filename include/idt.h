@@ -21,13 +21,13 @@ void idt_init();
 void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags);
 void watchdog_check();
 void watchdog_reset();
+extern volatile int watchdog_counter;
 
 // Сюда будут прилетать все прерывания
 struct registers {
-    unsigned int ds;
-    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    unsigned int err_code, int_no;
-    unsigned int eip, cs, eflags, useresp, ss;
+    unsigned int ds;                  // Наш push eax
+    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // pusha
+    unsigned int int_no, err_code;    // Наши push byte
+    unsigned int eip, cs, eflags, useresp, ss; // Пушит сам процессор
 };
-
 #endif

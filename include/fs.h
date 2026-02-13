@@ -1,17 +1,29 @@
 #ifndef FS_H
 #define FS_H
 
-#define MAX_FILES 10
-#define MAX_FILE_SIZE 256
+#include <stdint.h>
+
+#define CAWFS_MAGIC 0xCA705    // "CAWOS" magic number
+#define MAX_FILES 16
+#define FILES_START_LBA 71
 
 typedef struct {
-    char name[16];
-    char content[MAX_FILE_SIZE];
-    int exists;
-} File;
+    uint32_t magic;
+    uint32_t total_files;
+} cawfs_superblock_t;
 
-extern File fs[MAX_FILES];
+typedef struct {
+    char name[32];
+    uint32_t start_lba;
+    uint32_t size_bytes;
+    uint8_t  is_executable; // 1 для файлов в /bin
+    uint8_t  exists;
+} file_t;
 
-void init_fs();
+// API
+void fs_init();
+void fs_list(int* row);
+int  fs_load_to_memory(char* name, uint8_t* address);
+int  fs_read_content(char* name, uint8_t* address);
 
 #endif

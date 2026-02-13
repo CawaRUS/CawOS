@@ -1,8 +1,7 @@
 [org 0x7c00]
 KERNEL_OFFSET equ 0x1000
 
-; --- BIOS Parameter Block (BPB) ---
-jmp short start
+jmp start
 nop
 times 33 db 0 
 
@@ -15,54 +14,25 @@ start:
     mov sp, 0x7c00
     sti
 
-    test dl, dl
-    jnz .save_dl
-    mov dl, 0x80
-.save_dl:
     mov [BOOT_DRIVE], dl
 
-    ; 1. Приветствие
+    mov ax, 0x0003
+    int 0x10
+
     mov si, MSG_BOOTING
     call print_string_16
 
-    ; 2. Включаем A20
     call enable_a20
-    mov si, MSG_A20_OK
-    call print_string_16
-
-    ; 3. Загрузка ядра (53 сектора, как ты настроил)
+    
     mov si, MSG_LOAD_KERNEL
     call print_string_16
     call load_kernel
 
-    ; --- МЕНЮ ВЫБОРА РЕЖИМА ---
-    mov si, MSG_CHOOSE_MODE
-    call print_string_16
-
-.wait_key:
-    mov ah, 0x00
-    int 0x16            ; Ждем нажатия клавиши
-
-    cmp al, '1'
-    je .set_text_mode
-    cmp al, '2'
-    je .set_graph_mode
-    jmp .wait_key       ; Игнорируем другие клавиши
-
-.set_text_mode:
-    mov ax, 0x0003      ; Стандартный текстовый режим 80x25
-    int 0x10
-    jmp .finish_boot
-
-.set_graph_mode:
-    mov ax, 0x0013      ; Графический режим 13h (320x200 256c)
-    int 0x10
-    jmp .finish_boot
-
-.finish_boot:
-    ; 4. Переход в Protected Mode
     mov si, MSG_SWITCH_PM
     call print_string_16
+    
+    ; --- АНТИ-BOOTLOOP ТЕСТ №1 (Real Mode) ---
+    ; Если мы здесь, значит ядро загружено, A20 включен.
     
     call switch_to_pm
     jmp $
@@ -86,19 +56,32 @@ enable_a20:
     ret
 
 load_kernel:
+    mov [RETRY_COUNT], byte 3 ; Попробуем 3 раза, если диск тупит
+.retry:
     mov bx, KERNEL_OFFSET
     mov dh, 0
     mov ch, 0
-    mov cl, 2           ; Сектор 2 (сразу после бутлоадера)
-    mov al, 53          ; Читаем сектора
+    mov cl, 2           ; Сектор 2
+    mov al, KERNEL_SECTORS
     mov ah, 0x02
     mov dl, [BOOT_DRIVE]
     int 0x13
-    jc disk_error
     
-    cmp al, 53
-    jne disk_sectors_error
+    jnc .success        ; Если флаг переноса (CF) = 0, всё ок!
+    
+    ; Если ошибка — сбрасываем контроллер диска и пробуем еще раз
+    xor ax, ax          ; ah = 0 (Reset Disk Drive)
+    int 0x13
+    
+    dec byte [RETRY_COUNT]
+    jnz .retry          ; Если еще остались попытки — прыгаем в начало
+    
+    jmp disk_error      ; Если всё равно не вышло — фатал
+
+.success:
     ret
+
+RETRY_COUNT db 0
 
 disk_error:
     mov si, MSG_DISK_ERROR
@@ -116,9 +99,11 @@ switch_to_pm:
     mov eax, cr0
     or eax, 1
     mov cr0, eax
+    ; ВНИМАНИЕ: Если здесь зависает или ребутит — проблема в GDT
     jmp 0x08:init_pm 
 
-; --- GDT ---
+; --- GDT с выравниванием ---
+align 4
 gdt_start:
     dq 0x0
 gdt_code:
@@ -150,20 +135,23 @@ init_pm:
     mov gs, ax
     mov ss, ax
     
-    ; Стек подальше от ядра
     mov ebp, 0x90000 
     mov esp, ebp
 
+    ; --- АНТИ-BOOTLOOP ТЕСТ №2 (Protected Mode) ---
+    ; Пишем 'OK' в угол экрана красным цветом.
+    ; Если увидишь OK, значит переход в 32 бита УСПЕШЕН.
+    mov word [0xb8000], 0x4f4b ; 'K' (0x4b), фон красный (0x4)
+    mov word [0xb8002], 0x4f4f ; 'O' (0x4f), фон красный (0x4)
+
+    ; Если после этого ребут — значит падает само ядро в KERNEL_OFFSET
     call KERNEL_OFFSET
     jmp $
 
-; --- Данные ---
 BOOT_DRIVE          db 0
 MSG_BOOTING         db "CawOS Booting...", 0x0D, 0x0A, 0
-MSG_A20_OK          db " A20 Line: OK", 0x0D, 0x0A, 0
-MSG_LOAD_KERNEL     db " Kernel Loading...", 0x0D, 0x0A, 0
-MSG_CHOOSE_MODE     db 0x0D, 0x0A, "Select Boot Mode:", 0x0D, 0x0A, " 1. Text Mode (CLI)", 0x0D, 0x0A, " 2. Graphics Mode (GUI)", 0x0D, 0x0A, "Choice: ", 0
-MSG_SWITCH_PM       db 0x0D, 0x0A, " Jumping to Protected Mode...", 0
+MSG_LOAD_KERNEL     db " Loading Kernel...", 0x0D, 0x0A, 0
+MSG_SWITCH_PM       db " Jumping to Protected Mode...", 0
 MSG_DISK_ERROR      db "FATAL: Disk error!", 0
 MSG_SECTORS_ERROR   db "FATAL: Sector mismatch!", 0
 

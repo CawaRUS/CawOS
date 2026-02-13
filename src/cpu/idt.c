@@ -11,7 +11,7 @@ extern void idt_load(unsigned int);
 extern void isr32();
 
 volatile int watchdog_counter = 0;
-const int WATCHDOG_LIMIT = 1000; 
+const int WATCHDOG_LIMIT = 5000; 
 
 void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags) {
     idt[num].base_lo = (base & 0xFFFF);
@@ -36,19 +36,28 @@ void draw_panic_screen(const char* msg) {
     }
 }
 
-void isr_handler(struct registers r) {
-
-    if (r.int_no < 32) {
-        if (r.int_no == 0) draw_panic_screen(" KERNEL PANIC: DIVISION BY ZERO ");
-        else draw_panic_screen(" KERNEL PANIC: CPU EXCEPTION ");
-        while(1);
+// Добавили звездочку: теперь принимаем указатель на структуру
+void isr_handler(struct registers *r) { 
+    
+    // 1. Сразу отправляем EOI (используем стрелочку ->)
+    if (r->int_no >= 32) {
+        port_byte_out(0x20, 0x20);
+        if (r->int_no >= 40) port_byte_out(0xA0, 0x20);
     }
 
-    if (r.int_no == 32) {
-        static int tick_visual = 0;
-
-        watchdog_check();
-        port_byte_out(0x20, 0x20); // EOI
+    // 2. Логика таймера
+    if (r->int_no == 32) {
+        watchdog_counter++; 
+        
+        // Визуальный дебаг
+        if (watchdog_counter > WATCHDOG_LIMIT) {
+             draw_panic_screen(" WATCHDOG TIMEOUT ");
+             __asm__ volatile("cli; hlt"); 
+        }
+    } else if (r->int_no < 32) {
+        // Если прилетело прерывание меньше 32 (ошибка CPU)
+        draw_panic_screen(" CPU EXCEPTION ");
+        __asm__ volatile("cli; hlt");
     }
 }
 
@@ -79,23 +88,19 @@ void idt_init() {
 
     memset(&idt, 0, sizeof(struct idt_entry) * 256);
 
+    // Сначала забиваем ВСЕ 256 гейтов обработчиком isr0 (или любой заглушкой)
+    for(int i = 0; i < 256; i++) {
+        idt_set_gate(i, (unsigned int)isr0, 0x08, 0x8E);
+    }
+
+    // А теперь ставим конкретные
     idt_set_gate(0, (unsigned int)isr0, 0x08, 0x8E);
     idt_set_gate(32, (unsigned int)isr32, 0x08, 0x8E);
 
     idt_load((unsigned int)&idtp);
-
     init_timer(100);
-
-    __asm__ __volatile__("sti");
 }
 
-void watchdog_check() {
-    watchdog_counter++;
-    if (watchdog_counter >= WATCHDOG_LIMIT) {
-        draw_panic_screen(" KERNEL PANIC: WATCHDOG TIMEOUT ");
-        while(1);
-    }
-}
 
 void watchdog_reset() {
     watchdog_counter = 0;

@@ -21,7 +21,7 @@ gdt_end:
 
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
-    dd gdt_start
+    dd gdt_start + 0x7c00  ; Явно добавляем 0x7c00, если вдруг адресация съехала
 
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
